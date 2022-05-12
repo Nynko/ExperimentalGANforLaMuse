@@ -29,20 +29,8 @@ class GanFunctionsClass:
       self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
   # =================================================================================== #
-  #               4. Define the discriminator and generator losses                      #
+  #               1. Define the discriminator and generator losses                      #
   # =================================================================================== # 
-
-
-  # def wasserstein_loss(y_true, y_pred):
-  #     return tf.keras.K.mean(y_true * y_pred)
-
-  
-
-  # def discriminator_loss(real_output, fake_output):
-  #     real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-  #     fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-  #     total_loss = real_loss + fake_loss
-  #     return total_loss
 
   def discriminator_loss(self,disc_real_output, disc_generated_output):
     real_loss = self.cross_entropy(tf.ones_like(disc_real_output), disc_real_output)
@@ -56,34 +44,10 @@ class GanFunctionsClass:
       loss = self.cross_entropy(tf.ones_like(output_discriminateur), output_discriminateur)
       return loss
 
-  # =================================================================================== #
-  #               4. Define the discriminator and generator losses                      #
-  # =================================================================================== # 
-
-
-
-  # def discriminator_loss(real_output, fake_output):
-  #     real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-  #     fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-  #     total_loss = real_loss + fake_loss
-  #     return total_loss
-
-  # def discriminator_loss(self,disc_real_output, disc_generated_output):
-  #   real_loss = self.cross_entropy(tf.ones_like(disc_real_output), disc_real_output)
-  #   generated_loss = self.cross_entropy(tf.zeros_like(disc_generated_output), disc_generated_output)
-  #   total_disc_loss = real_loss + generated_loss
-
-  #   return total_disc_loss
-
-
-  # def generator_loss(self,output_discriminateur): 
-  #     loss = self.cross_entropy(tf.ones_like(output_discriminateur), output_discriminateur)
-  #     return loss
-
 
 
   # =================================================================================== #
-  #               6. Define the  generator                                              #
+  #               2. Define the  generator                                              #
   # =================================================================================== #  
 
   def downsample(self,filters, size, apply_batchnorm=True):
@@ -173,7 +137,7 @@ class GanFunctionsClass:
 
 
   # =================================================================================== #
-  #               7. Define the discriminator                                           #
+  #               3. Define the discriminator                                           #
   # =================================================================================== # 
 
 
@@ -194,11 +158,9 @@ class GanFunctionsClass:
       return model
 
 
-
-
-
-    
-  ## UTILS
+  # =================================================================================== #
+  #               4. UTILS - Récupération des batchs, loads des images...               #
+  # =================================================================================== # 
 
   def getTupleRandom(self,batchsize):
       listCollages = os.listdir("./Images/Collage")
@@ -285,6 +247,12 @@ class GanFunctionsClass:
       plt.ylabel("Loss")
       plt.title("Losses")
       plt.show()
+      
+      
+      
+  # =================================================================================== #
+  #               5. Fonctions d'entrainements                                          #
+  # =================================================================================== # 
 
 
 
