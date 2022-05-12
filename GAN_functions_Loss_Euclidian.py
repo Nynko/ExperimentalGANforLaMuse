@@ -24,6 +24,7 @@ LAMBDA = 1
 
 class GanFunctionsLossEuclidian(GanFunctionsClass):
 
+
 # =================================================================================== #
 #               4. Define the discriminator and generator losses                      #
 # =================================================================================== # 
@@ -32,7 +33,11 @@ class GanFunctionsLossEuclidian(GanFunctionsClass):
         loss = self.cross_entropy(tf.ones_like(output_discriminateur), output_discriminateur)
 
         # Mean absolute error
-        l1_loss = tf.reduce_mean(tf.abs(tf.cast(collage_original,tf.float32) - tf.cast(generated,tf.float32)))
+        # l1_loss = tf.reduce_mean(tf.abs(tf.cast(collage_original,tf.float32) - tf.cast(generated,tf.float32)))
+        
+        # Norme euclidienne
+        l1_loss = tf.norm(tf.cast(collage_original,tf.float32) - tf.cast(generated,tf.float32),ord='euclidean')
+
 
         total_gen_loss = loss + (LAMBDA * l1_loss)
 
