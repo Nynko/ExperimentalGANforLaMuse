@@ -75,16 +75,10 @@ if __name__ == "__main__":
 
 
     # =================================================================================== #
-    #               3. The combined model (stacked generator and discriminator)           #
-    #               Trains the generator to fool the discriminator                        #
+    #               3. Define Checkpoints and the list of losses                          #
+    #                                                                                     #
     # =================================================================================== #         
 
-    ### DCGAN 
-    # gan = tf.keras.Sequential()
-    # gan.add(generator)
-    # gan.add(discriminator)
-    # discriminator.trainable = False 
-    # gan.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(1e-4), metrics=['mae'])
 
     loss_liste= []
     step=tf.Variable(1)
