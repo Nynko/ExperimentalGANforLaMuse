@@ -62,6 +62,11 @@ if __name__ == "__main__":
     print(discriminator.summary()) 
 
 
+    # =================================================================================== #
+    #               3. Define Checkpoints and the list of losses                          # 
+    # =================================================================================== #         
+
+
     loss_liste= []
     step=tf.Variable(1)
     checkpoint_dir = "./Checkpoints/"

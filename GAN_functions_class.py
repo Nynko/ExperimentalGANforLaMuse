@@ -30,7 +30,7 @@ class GanFunctionsClass:
       self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
   # =================================================================================== #
-  #               4. Define the discriminator and generator losses                      #
+  #               1. Define the discriminator and generator losses                      #
   # =================================================================================== # 
 
 
@@ -45,17 +45,21 @@ class GanFunctionsClass:
 
   def generator_loss(self,output_discriminateur, generated, collage_original): 
         loss = self.cross_entropy(tf.ones_like(output_discriminateur), output_discriminateur)
-
         # Mean absolute error
         l1_loss = tf.reduce_mean(tf.abs(tf.cast(collage_original,tf.float32) - tf.cast(generated,tf.float32)))
+
+        # Euclidian distance
+        # l1_loss = tf.norm(tf.cast(collage_original,tf.float32) - tf.cast(generated,tf.float32), ord="euclidean")
+
 
         total_gen_loss = loss + (self.varLambda * l1_loss)
 
         return total_gen_loss, l1_loss
 
 
+
   # =================================================================================== #
-  #               6. Define the  generator                                              #
+  #               2. Define the  generator                                              #
   # =================================================================================== #  
 
   def downsample(self,filters, size, apply_batchnorm=True):
@@ -145,7 +149,7 @@ class GanFunctionsClass:
 
 
   # =================================================================================== #
-  #               7. Define the discriminator                                           #
+  #               3. Define the discriminator                                           #
   # =================================================================================== # 
 
 
@@ -166,11 +170,9 @@ class GanFunctionsClass:
       return model
 
 
-
-
-
-    
-  ## UTILS
+  # =================================================================================== #
+  #               4. UTILS - Récupération des batchs, loads des images...               #
+  # =================================================================================== # 
 
   def getTupleRandom(self,batchsize):
       listCollages = os.listdir("./Images/Collage")
@@ -257,6 +259,12 @@ class GanFunctionsClass:
       plt.ylabel("Loss")
       plt.title("Losses")
       plt.show()
+      
+      
+      
+  # =================================================================================== #
+  #               5. Fonctions d'entrainements                                          #
+  # =================================================================================== # 
 
 
 

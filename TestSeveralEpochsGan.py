@@ -18,6 +18,10 @@ EPOCHS= 100
 height = IMG_SHAPE[0]
 width = IMG_SHAPE[1]
 
+"""
+Create and save all the output images for one input image
+Also create and save a grid of all the images.
+"""
 def TestGan(img_path,output):
     # Load the images
     img = load_img(img_path)
