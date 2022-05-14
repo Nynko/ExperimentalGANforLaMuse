@@ -9,7 +9,7 @@ import tensorflow as tf
 import numpy as np
 from GAN_functions_class import GanFunctionsClass
 from GAN_functions_inpainting1 import GanFunctionsInpainting
-from GAN_functions_Loss_Euclidian import GanFunctionsLossEuclidian
+from GAN_functions_DiscriminateurDePix2Pix import LAMBDA, GanFunctionsDiscriminateurDePix2Pix
 
 
 
@@ -19,12 +19,14 @@ BATCH_SIZE = 100
 IMG_SHAPE = (256, 256, 3)
 EPOCHS= 350
 
+LAMBDA = 0
+
 
 if __name__ == "__main__":
 
 
     # Create a GanFunctionsClass object
-    gan = GanFunctionsLossEuclidian(BATCH_SIZE,IMG_SHAPE)
+    gan = GanFunctionsClass(BATCH_SIZE,IMG_SHAPE,LAMBDA)
 
     ## Batch
     batch_size = BATCH_SIZE
@@ -48,16 +50,6 @@ if __name__ == "__main__":
     generator.compile(loss=gan.generator_loss, optimizer=generator_optimizer)
     print(generator.summary())
 
-    ## Test d'une image sur le generateur
-    # nb = 1
-    # img = images[nb].reshape(1,1024,1024,3)
-    #Si des fichiers de checkpoints existent, on les charge
-    # generated_image = generator(img, training=False)
-    # img = array_to_img(generated_image[0], scale=False)
-    # img.show()
-    # image = array_to_img(images[nb], scale=False)
-    # image.show()
-
 
     # =================================================================================== #
     #                             2. Build and compile the discriminator                  #
@@ -67,24 +59,8 @@ if __name__ == "__main__":
     discriminator.compile(loss=[gan.discriminator_loss],
                                 optimizer=discriminator_optimizer,
                                 metrics=['accuracy'])
-    print(discriminator.summary())
+    print(discriminator.summary()) 
 
-    # decision = discriminator(generated_image)
-    # print (decision)     
-
-
-
-    # =================================================================================== #
-    #               3. The combined model (stacked generator and discriminator)           #
-    #               Trains the generator to fool the discriminator                        #
-    # =================================================================================== #         
-
-    ### DCGAN 
-    # gan = tf.keras.Sequential()
-    # gan.add(generator)
-    # gan.add(discriminator)
-    # discriminator.trainable = False 
-    # gan.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(1e-4), metrics=['mae'])
 
     loss_liste= []
     step=tf.Variable(1)

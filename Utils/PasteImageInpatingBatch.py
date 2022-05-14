@@ -1,11 +1,14 @@
-from PIL import Image
+#!/usr/bin/python3
+
+from PIL import Image, ImageFilter
 import os
 import random
 import cv2
 import argparse
 
 ## Il faut adapté le main pour utiliser ces fonctions de manière à créer plein d'images avec les contours et le mask:
-# Il faut a chaque fois crée : un fichier de masque et une image avec le masque incrusté (pour être sûr que c'est ok) et l'image original avec juste l'image collée dessus (afin de peut être entrainer un gan d'inpainting en plus, mais pas sur pas ouf..jsp)
+# Il faut a chaque fois crée : un fichier de masque et une image avec le masque incrusté (pour être sûr que c'est ok)
+# et l'image original avec juste l'image collée dessus (afin de peut être entrainer un gan d'inpainting en plus, mais pas sur pas ouf..jsp)
 
 
 
@@ -25,7 +28,7 @@ def create_mask(img_path):
     # img_path ="./image.png"
     print(img_path)
 
-    if not path.isfile(img_path):
+    if not os.path.isfile(img_path):
         print("fichier non trouvé")
         exit(0)
     # load image with alpha channel
@@ -89,7 +92,7 @@ def create_mask(img_path):
 
     return img2,img_copy
 
-def paste_image_from_file(background,img_path, output):
+def paste_image_from_file(background,img_path, masks, output, mask_thickness = 15):
 
     if not os.path.isdir(background):
         print("background non trouvé")
@@ -110,12 +113,16 @@ def paste_image_from_file(background,img_path, output):
             # Choose a random background image
             back = os.listdir(background)
             back2 = os.path.join(background, random.choice(back))
-            paste_image(back2,img_path2,output)
+            paste_image(back2,img_path2,output, mask_thickness)
 
-def paste_image(back,img_path,output):
+def paste_image(back,img_path,output, mask_thickness = 15):
 
     background = Image.open(back)
     foreground = Image.open(img_path)
+    mask = 0
+    
+    name = img_path.split("/")[-1]
+    nameFolder = img_path.split("/")[-2]
 
     # Generate random coordinates
     if(background.size[0] > foreground.size[0]):
@@ -129,17 +136,44 @@ def paste_image(back,img_path,output):
 
     try:
         background.paste(foreground, (x,y), foreground)
+        
+        
     except:
         try:
             Image.alpha_composite(background, foreground)
         except:
             print("Error: ", img_path, " ", back, " background size: ", background.size, " foreground size: ", foreground.size)
 
+
+    mask = Image.new(mode="RGBA", size=(background.size[0], background.size[1]))
+    
+    
+    mask1 = foreground.filter(ImageFilter.FIND_EDGES)
+    
+    
+    
+    mask.paste(mask1, (x,y), mask1)
+    
+    
+    mask = mask.filter(ImageFilter.MaxFilter(mask_thickness))
+    
+    mask = mask.filter(ImageFilter.BLUR)
+    
+    thresh = 10
+    fn = lambda x : 255 if x > thresh else 0
+    mask = mask.convert('L').point(fn, mode='1')
+    
+    
+    
     # save output
-    name = img_path.split("/")[-1]
-    nameFolder = img_path.split("/")[-2]
+    
     path = output + "/" + nameFolder+ name +".png"
+    
     background.save(path)
+    
+    path_mask = masks + "/" + nameFolder+ name +".png"
+    mask.save(path_mask)
+    
     print(path)
 
 
@@ -147,9 +181,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get contours from an image')
     parser.add_argument("-b","--backgrounds", help="Path to the folder of the images to use as background", required=True)
     parser.add_argument("-i","--images", help="Path to the folder of images in pngs")
+    parser.add_argument("-m","--masks", help="Path to the folder of the output masks")
     parser.add_argument("-o","--output", help="Path to the folder of the output images")
+    parser.add_argument("-t","--thickness", help="mask outline thickness", default=15)
     args = parser.parse_args()
     background = args.backgrounds
     img_path = args.images
     output = args.output
-    paste_image_from_file(background,img_path,output)
+    masks = args.masks
+    thickness = int(args.thickness)
+    paste_image_from_file(background,img_path, masks,output, mask_thickness=thickness)

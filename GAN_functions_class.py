@@ -19,13 +19,14 @@ path_img= 'Images/'
 path_Collage = "Images/Collage/"
 path_Real = 'Images/Real/'
 
-LAMBDA = 1
+LAMBDA = 0
 
 
 class GanFunctionsClass:
-  def __init__(self, batchsize, img_shape):
+  def __init__(self, batchsize, img_shape, varLambda):
       self.batchsize = batchsize
       self.img_shape = img_shape
+      self.varLambda = varLambda
       self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
   # =================================================================================== #
@@ -33,53 +34,24 @@ class GanFunctionsClass:
   # =================================================================================== # 
 
 
-  # def wasserstein_loss(y_true, y_pred):
-  #     return tf.keras.K.mean(y_true * y_pred)
+  def discriminator_loss(self,real_output,disc_fake_output, disc_generated_output):
+      real_loss = self.cross_entropy(tf.ones_like(real_output), real_output)
+      fake_loss = self.cross_entropy(tf.zeros_like(disc_fake_output), disc_fake_output)
+      generated_loss = self.cross_entropy(tf.zeros_like(disc_generated_output), disc_generated_output)
+      total_disc_loss = fake_loss + generated_loss + real_loss
 
-  
-
-  # def discriminator_loss(real_output, fake_output):
-  #     real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-  #     fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-  #     total_loss = real_loss + fake_loss
-  #     return total_loss
-
-  def discriminator_loss(self,disc_real_output, disc_generated_output):
-    real_loss = self.cross_entropy(tf.ones_like(disc_real_output), disc_real_output)
-    generated_loss = self.cross_entropy(tf.zeros_like(disc_generated_output), disc_generated_output)
-    total_disc_loss = real_loss + generated_loss
-
-    return total_disc_loss
+      return total_disc_loss
 
 
-  def generator_loss(self,output_discriminateur): 
-      loss = self.cross_entropy(tf.ones_like(output_discriminateur), output_discriminateur)
-      return loss
+  def generator_loss(self,output_discriminateur, generated, collage_original): 
+        loss = self.cross_entropy(tf.ones_like(output_discriminateur), output_discriminateur)
 
-  # =================================================================================== #
-  #               4. Define the discriminator and generator losses                      #
-  # =================================================================================== # 
+        # Mean absolute error
+        l1_loss = tf.reduce_mean(tf.abs(tf.cast(collage_original,tf.float32) - tf.cast(generated,tf.float32)))
 
+        total_gen_loss = loss + (self.varLambda * l1_loss)
 
-
-  # def discriminator_loss(real_output, fake_output):
-  #     real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-  #     fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-  #     total_loss = real_loss + fake_loss
-  #     return total_loss
-
-  # def discriminator_loss(self,disc_real_output, disc_generated_output):
-  #   real_loss = self.cross_entropy(tf.ones_like(disc_real_output), disc_real_output)
-  #   generated_loss = self.cross_entropy(tf.zeros_like(disc_generated_output), disc_generated_output)
-  #   total_disc_loss = real_loss + generated_loss
-
-  #   return total_disc_loss
-
-
-  # def generator_loss(self,output_discriminateur): 
-  #     loss = self.cross_entropy(tf.ones_like(output_discriminateur), output_discriminateur)
-  #     return loss
-
+        return total_gen_loss, l1_loss
 
 
   # =================================================================================== #
@@ -297,11 +269,11 @@ class GanFunctionsClass:
           generated_images = generator(fake_images, training=True)
 
           real_output = discriminator(real_images, training=True)
-          fake_output = discriminator(generated_images, training=True)
-          fake_output2 = discriminator(fake_images, training=True)
+          fake_output_generated = discriminator(generated_images, training=True)
+          fake_output = discriminator(fake_images, training=True)
 
-          disc_loss = self.discriminator_loss(real_output, fake_output)
-          gen_loss = self.generator_loss(fake_output)
+          disc_loss = self.discriminator_loss(real_output,fake_output, fake_output_generated)
+          gen_loss, l1_loss = self.generator_loss(fake_output,generated_images,fake_images)
 
 
       gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
@@ -310,7 +282,7 @@ class GanFunctionsClass:
       generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
       discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
 
-      return gen_loss, disc_loss
+      return gen_loss, disc_loss, l1_loss
 
   def train(self,checkpoint, checkpoint_prefix,checkpoint_dir,generator, discriminator,generator_optimizer, discriminator_optimizer,listeTuple,batch_size,step, loss_liste ,epochs):
       if epochs > len(listeTuple):
@@ -325,11 +297,12 @@ class GanFunctionsClass:
 
           batch = listeTuple[epoch]
           batch_real, batch_fake = self.LoadImages(batch,batch_size)
-          gen_loss, disc_loss = self.train_step(generator, discriminator,generator_optimizer, discriminator_optimizer,batch_real,batch_fake)
+          gen_loss, disc_loss, euclidian_loss = self.train_step(generator, discriminator,generator_optimizer, discriminator_optimizer,batch_real,batch_fake)
 
           # Print model losses
           print("")
           print("Generator loss: {}".format(gen_loss))
+          print("Mean absolute error * LAMBDA: {}".format(euclidian_loss*LAMBDA))
           print("Discriminator loss: {}".format(disc_loss))
 
           # Adding the losses to the list
